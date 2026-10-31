@@ -100,6 +100,7 @@ def prepare_daily_sales(raw: pd.DataFrame):
     df = df.dropna(
         subset=["InvoiceNo", "InvoiceDate", "Quantity", "UnitPrice"]
     ).copy()
+    rows_after_required_field_validation = int(len(df))
 
     # UCI documents invoices beginning with C as cancellations.
     cancelled_mask = (
@@ -155,11 +156,7 @@ def prepare_daily_sales(raw: pd.DataFrame):
         ),
         "license": "CC BY 4.0",
         "original_rows": int(original_rows),
-        "rows_after_required_field_validation": int(
-            len(df.dropna(
-                subset=["InvoiceNo", "InvoiceDate", "Quantity", "UnitPrice"]
-            ))
-        ),
+        "rows_after_required_field_validation": rows_after_required_field_validation,
         "duplicate_rows_removed": duplicate_rows,
         "rows_after_duplicate_removal": int(original_rows - duplicate_rows),
         "cancelled_invoice_rows_removed": cancelled_rows,
