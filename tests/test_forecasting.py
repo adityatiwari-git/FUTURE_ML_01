@@ -51,6 +51,21 @@ class ForecastingFeatureTests(unittest.TestCase):
         self.assertTrue((forecast["forecast_revenue_gbp"] >= 0).all())
         self.assertEqual(forecast["model"].unique().tolist(), ["mean_baseline"])
 
+
+    def test_seasonal_backtest_does_not_read_future_test_targets(self):
+        dates = pd.date_range("2024-01-01", periods=42, freq="D")
+        raw = pd.DataFrame({
+            "date": dates,
+            "revenue_gbp": np.arange(1, 43, dtype=float),
+        })
+        test_df = raw.tail(7).copy()
+
+        predictions = train.seasonal_naive_rolling(raw, test_df)
+
+        # Each first-week forecast must use the matching weekday from
+        # the preceding week, not the actual value from the test period.
+        np.testing.assert_allclose(predictions, np.arange(29, 36, dtype=float))
+
     def test_seasonal_naive_forecast_uses_same_weekday(self):
         dates = pd.date_range("2024-01-01", periods=35, freq="D")
         history = pd.DataFrame({
