@@ -85,7 +85,10 @@ def prepare_daily_sales(raw: pd.DataFrame):
     """Clean transaction lines and aggregate gross sales by calendar day."""
     df = raw.copy()
     original_rows = len(df)
-
+    
+    # Remove exact duplicate transaction records
+    duplicate_rows = int(df.duplicated().sum())
+    df = df.drop_duplicates().copy()
     df["InvoiceNo"] = df["InvoiceNo"].astype("string").str.strip()
     df["InvoiceDate"] = pd.to_datetime(
         df["InvoiceDate"], errors="coerce"
@@ -153,10 +156,12 @@ def prepare_daily_sales(raw: pd.DataFrame):
         "license": "CC BY 4.0",
         "original_rows": int(original_rows),
         "rows_after_required_field_validation": int(
-            original_rows - int(raw[["InvoiceNo", "InvoiceDate",
-                                     "Quantity", "UnitPrice"]]
-                                .isna().any(axis=1).sum())
+            len(df.dropna(
+                subset=["InvoiceNo", "InvoiceDate", "Quantity", "UnitPrice"]
+            ))
         ),
+        "duplicate_rows_removed": duplicate_rows,
+        "rows_after_duplicate_removal": int(original_rows - duplicate_rows),
         "cancelled_invoice_rows_removed": cancelled_rows,
         "non_positive_sales_rows_removed": invalid_sales_rows,
         "clean_transaction_rows": int(len(df)),
@@ -168,10 +173,11 @@ def prepare_daily_sales(raw: pd.DataFrame):
         ),
         "total_units_sold": int(daily["units_sold"].sum()),
         "cleaning_policy": (
-            "Cancelled invoices and rows with missing essential values "
-            "were excluded. Non-positive quantity or unit price rows "
-            "were excluded, so the target represents gross positive sales. "
-            "Returns are not netted against gross revenue."
+            "Exact duplicate rows, cancelled invoices and rows with missing "
+            "essential values were excluded. Non-positive quantity or unit "
+            "price rows were excluded. CustomerID and Description were not "
+            "required. The target represents gross positive sales; returns "
+            "are not netted against gross revenue."
         ),
     }
     return daily, summary
