@@ -86,7 +86,12 @@ def metric_values(actual, predicted):
 
 def seasonal_naive_rolling(raw, test_df):
     """Predict each test day using the latest observed value from its weekday."""
-    history = raw.set_index("date")[TARGET].copy()
+    first_test_date = test_df["date"].min()
+    history = (
+        raw.loc[raw["date"] < first_test_date]
+        .set_index("date")[TARGET]
+        .copy()
+    )
     predictions = []
     for _, row in test_df.iterrows():
         date = row["date"]
