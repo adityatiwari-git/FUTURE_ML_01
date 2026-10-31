@@ -24,8 +24,11 @@ jobs:
           pip install -r requirements.txt
 
       - name: Compile Python files
-        run: python -m compileall -q src
+        run: python -m compileall -q src tests
 
       - name: Verify library imports
         run: |
           python -c "import pandas, numpy, sklearn, matplotlib, openpyxl"
+
+      - name: Run forecasting unit tests
+        run: python -m unittest discover -s tests -v
