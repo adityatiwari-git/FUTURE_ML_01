@@ -1,41 +1,86 @@
 # Sales & Demand Forecasting | Future Interns ML Task 1
 
-Forecast product demand from historical daily sales using a reproducible machine-learning workflow.
+A reproducible machine-learning workflow that converts retail transactions into a daily sales series, explores demand patterns, and forecasts future sales.
 
-## Project status
-Starter implementation committed. The included demo dataset is **synthetic** and is intended to verify the pipeline; it is not evidence of real business performance. Replace it with a properly licensed business dataset before drawing commercial conclusions.
+## Project objective
 
-## Quick start
-```bash
-python -m venv .venv
-# Windows: .venv\\Scripts\\activate
-# macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
-python src/train.py
-```
+Build a forecasting workflow that helps a retailer understand expected daily sales and plan business activity. The primary target is **daily gross sales revenue in GBP (£)**. Daily units sold are retained as a secondary business measure.
 
-The script generates synthetic daily sales, builds calendar/lag/rolling features, trains a baseline and a random-forest regressor, evaluates on a chronological holdout set, and saves predictions and metrics under `reports/`.
+## Dataset
 
-## Method
-- Target: daily units sold for one demo product/store series.
-- Features: calendar fields, price, promotion flag, lagged demand, and rolling means.
-- Validation: chronological split (no random shuffling).
-- Metrics: MAE, RMSE, and R². Interpret metrics in the context of the synthetic data.
+This project uses the [UCI Online Retail dataset](https://archive.ics.uci.edu/dataset/352/online-retail), donated by Daqing Chen.
 
-## Structure
-```
-src/train.py          # end-to-end reproducible demo
-data/                 # generated locally; not committed
-reports/              # generated metrics and predictions
+- 541,909 transaction rows.
+- Transactions from 1 December 2010 to 9 December 2011.
+- UK-based non-store online retailer.
+- License: CC BY 4.0.
+- DOI: https://doi.org/10.24432/C5BW33.
+
+The original Excel workbook is downloaded locally by the preparation script and is not committed to this repository. See [data/README.md](data/README.md) for provenance and cleaning policy.
+
+## Project structure
+
+```text
+src/
+  prepare_data.py       # Download, validate, clean and aggregate transactions
+  explore.py            # Exploratory analysis and business visuals
+  train.py              # Time-series feature engineering and model evaluation
+data/
+  raw/                  # Downloaded source workbook (not committed)
+  processed/            # Daily sales CSV (not committed)
+reports/                # Metrics, predictions and charts (not committed)
 requirements.txt
 ```
 
-## Next steps
-1. Select a documented, licensed real-world sales dataset.
-2. Adapt the data-loading and feature-building steps to its schema.
-3. Compare against seasonal-naive and other forecasting baselines.
-4. Tune only on training/validation periods; preserve a final untouched test period.
-5. Document dataset provenance, limitations, and business implications.
+## Setup
 
-## Limitations
-This starter is a supervised regression demonstration, not a production forecasting service. Forecast quality depends on data volume, seasonality, promotions, stockouts, and changes in business conditions.
+Python 3.10+ is recommended.
+
+```bash
+python -m venv .venv
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+## Run the workflow
+
+Run commands from the repository root:
+
+```bash
+python src/prepare_data.py
+python src/explore.py
+python src/train.py
+```
+
+The first command downloads the source workbook if it is not already present. An internet connection is required for this first run.
+
+## Forecasting and evaluation approach
+
+- Use time-ordered observations; do not randomly shuffle a time series.
+- Compare a simple mean baseline, a same-weekday seasonal baseline, Random Forest and HistGradientBoosting.
+- Create lag and rolling features using past observations only.
+- Evaluate on a later chronological holdout period.
+- Report MAE and RMSE in GBP, with R² as a supplementary metric.
+- The test is a rolling one-day-ahead backtest: the actual observation is available before forecasting the next date. This is not a recursive multi-day forecast.
+
+## Outputs
+
+The scripts create:
+- Clean daily data at `data/processed/daily_sales.csv`.
+- Data preparation and EDA summaries under `reports/`.
+- Monthly and weekday summaries as CSV files.
+- Holdout predictions and model metrics.
+- PNG charts in `reports/figures/`.
+
+Generated data and reports are excluded from Git to keep the repository focused on source code and reproducibility.
+
+## Interpretation and limitations
+
+The dataset contains about one year of history, so annual seasonality cannot be robustly established from multiple years. The cleaning policy forecasts gross positive sales and excludes cancellations and non-positive sales lines; returns are not netted into that target. Transaction lines are treated as the observed demand record, but stockouts, unrecorded lost sales, inventory constraints, marketing campaigns and future business changes are not available in the source data.
+
+This is an educational historical forecasting exercise, not a production sales-planning service. The backtest metrics describe only the selected historical holdout period and should not be presented as guaranteed future performance.
+
+## Attribution
+
+Chen, D. (2015). *Online Retail* [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5BW33. Licensed under CC BY 4.0.
