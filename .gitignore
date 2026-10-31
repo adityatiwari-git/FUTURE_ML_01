@@ -5,6 +5,7 @@ venv/
 .ipynb_checkpoints/
 data/*
 !data/.gitkeep
+!data/README.md
 reports/*
 !reports/.gitkeep
 .DS_Store
