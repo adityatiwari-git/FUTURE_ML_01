@@ -58,11 +58,11 @@ def make_features(df):
     """Create calendar, lag and rolling features using past values only."""
     out = df.copy()
     dates = out["date"]
-    out["day_of_week"] = dates.dt.dayofweek
+    out["day_of_week"] = dates.dt.day_of_week
     out["day_of_month"] = dates.dt.day
     out["month"] = dates.dt.month
-    out["day_of_year"] = dates.dt.dayofyear
-    out["is_weekend"] = (dates.dt.dayofweek >= 5).astype(int)
+    out["day_of_year"] = dates.dt.day_of_year
+    out["is_weekend"] = (dates.dt.day_of_week >= 5).astype(int)
 
     out["lag_1"] = out[TARGET].shift(1)
     out["lag_7"] = out[TARGET].shift(7)
@@ -95,7 +95,7 @@ def seasonal_naive_rolling(raw, test_df):
     predictions = []
     for _, row in test_df.iterrows():
         date = row["date"]
-        same_weekday = history[history.index.dayofweek == date.dayofweek]
+        same_weekday = history[history.index.day_of_week == date.day_of_week]
         prediction = (
             float(same_weekday.iloc[-1])
             if not same_weekday.empty else float(history.iloc[-1])
@@ -133,11 +133,11 @@ def future_feature_row(history, date):
         raise ValueError("At least 28 historical days are required to forecast.")
 
     row = {
-        "day_of_week": date.dayofweek,
+        "day_of_week": date.day_of_week,
         "day_of_month": date.day,
         "month": date.month,
-        "day_of_year": date.dayofyear,
-        "is_weekend": int(date.dayofweek >= 5),
+        "day_of_year": date.day_of_year,
+        "is_weekend": int(date.day_of_week >= 5),
         "lag_1": float(values.iloc[-1]),
         "lag_7": float(values.iloc[-7]),
         "rolling_mean_7": float(values.iloc[-7:].mean()),
@@ -157,7 +157,7 @@ def recursive_forecast(model_name, fitted_model, raw, horizon):
 
     for date in future_dates:
         if model_name == "seasonal_naive_7day":
-            same_weekday = history[history.index.dayofweek == date.dayofweek]
+            same_weekday = history[history.index.day_of_week == date.day_of_week]
             prediction = (
                 float(same_weekday.iloc[-1])
                 if not same_weekday.empty else float(history.iloc[-1])
